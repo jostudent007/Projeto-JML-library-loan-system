@@ -1,120 +1,102 @@
-# 📚 Sistema de Gerenciamento de Biblioteca (Library Loan System)
+# 📚 Sistema de Gerenciamento de Biblioteca (Especificação JML)
 
 ![Java](https://img.shields.io/badge/Java-21-blue?logo=java)
 ![Maven](https://img.shields.io/badge/Maven-3.8%2B-red?logo=apachemaven)
+![JML](https://img.shields.io/badge/JML-OpenJML-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-Projeto da disciplina de Boas Práticas de Programação. O objetivo é criar um sistema de gerenciamento de empréstimos de biblioteca,
-com foco na aplicação de princípios de design como **SOLID** e **Clean Code** para garantir um software manutenível, testável e desacoplado.
+Projeto desenvolvido para a disciplina de **Lógica Aplicada à Engenharia de Software**.
+O objetivo principal deste repositório é aplicar **Especificação Formal** utilizando **JML (Java Modeling Language)** em um sistema de gerenciamento de biblioteca, garantindo a corretude do software através da abordagem de *Design by Contract* (Projeto por Contrato).
 
 ---
 
-## 🧑‍💻 Autor
+## 🧑‍💻 Autores
 
-* [Joadson Ferreira do Nascimento]
+* **[Joadson Ferreira do Nascimento]**
+* **[Paulo Sérgio da Silva Junior]**
 
-## ✨ Funcionalidades
+## 🎯 Objetivo do Projeto
 
-O sistema implementa as seguintes funcionalidades através de um menu interativo no console:
+Diferente de implementações focadas apenas na funcionalidade, este projeto visa demonstrar o uso de lógica formal para validar o comportamento do software. O código foi anotado com especificações JML para definir rigorosamente:
 
-* **Gestão de Usuários:**
-    * Cadastro de novos usuários.
-    * Listagem de todos os usuários cadastrados.
-* **Gestão de Acervo:** Cadastro de livros (Título, Autor, ISBN), com distinção entre:
-    * **Livros Físicos:** Com controle de quantidade de cópias.
-    * **Livros Digitais:** Sem controle de cópias (sempre disponíveis).
-* **Operações de Empréstimo:**
-    * Realizar empréstimo de um livro para um usuário (com verificação de disponibilidade).
-    * Realizar a devolução de um livro.
-* **Consultas e Relatórios:**
-    * **Listar Livros e Disponibilidade:** Mostra todos os livros do acervo e sua disponibilidade atual.
-    * **Relatório Consolidado de Empréstimos:** Mostra o total de empréstimos para cada livro (ordem descendente) e o total geral.
-    * **Listar Empréstimos Ativos:** Mostra todos os empréstimos que ainda não foram devolvidos.
-* **Utilitários:**
-    * **Carregar Dados:** "Semeia" (seed) o sistema com um conjunto de dados de teste (livros, usuários e empréstimos) para permitir o teste imediato das funcionalidades.
+* **Invariantes de Classe:** Propriedades que devem ser sempre verdadeiras para os objetos do sistema.
+* **Pré-condições (`requires`):** O que deve ser verdade antes de um método ser executado.
+* **Pós-condições (`ensures`):** O que o método garante que será verdade após sua execução.
+* **Sinais (`signals`):** As exceções que o método pode lançar e sob quais condições.
 
+---
 
-## 🏛️ Arquitetura e Boas Práticas
+## ✨ Funcionalidades do Sistema
 
-O foco principal deste projeto foi a aplicação de boas práticas. A arquitetura foi desenhada para ser desacoplada, coesa e testável, baseando-se nos princípios **SOLID**.
+O sistema (o "objeto de estudo") implementa as seguintes funcionalidades, sobre as quais as regras lógicas foram aplicadas:
 
-### Camadas do Sistema
+* **Gestão de Usuários:** Cadastro e listagem.
+* **Gestão de Acervo:** Cadastro de livros Físicos (com estoque) e Digitais (estoque infinito).
+* **Operações de Empréstimo:** Realizar empréstimo e devolução, respeitando as regras de disponibilidade.
+* **Consultas e Relatórios:** Listagem de disponibilidade e relatórios de empréstimos ativos.
+* **Utilitários:** Carga de dados (seed) para testes.
 
-Utilizamos uma arquitetura em camadas principais:
+---
 
-#### 1. Model (`/model`)
+## 🏛️ Arquitetura e Especificação Lógica
 
-* Classes POJO (Plain Old Java Objects) que representam as entidades do sistema (Ex: `User.java`, `Book.java`, `Loan.java`).
-* **Boa Prática (Encapsulamento):** As próprias classes modelo são responsáveis por garantir sua integridade. A lógica de validação (ex: `totalCopies` não pode ser negativo) está nos construtores e *setters*.
+O sistema segue uma arquitetura em camadas, onde cada camada recebeu um tipo específico de atenção na especificação JML:
 
-#### 2. Repository (`/repository`)
+### 1. Model (`/model`) - Invariantes
+As entidades (`User`, `Book`, `Loan`) contêm as **Invariantes de Classe**.
+* *Exemplo de Lógica:* Um livro nunca pode ter um número negativo de cópias disponíveis (`invariant totalCopies >= 0;`). Um empréstimo deve ter sempre uma data de início válida.
+* Essas anotações garantem a consistência dos dados em qualquer momento da execução.
 
-* Responsável pela **abstração da persistência** dos dados.
-* **Boa Prática (Inversão de Dependência - 'D' do SOLID):** Usamos **Interfaces** (Ex: `UserRepository`) para definir o "contrato" (o que fazer) e classes de **Implementação** (Ex: `InMemoryUserRepository`) para definir o "trabalhador" (como fazer).
-* Isso desacopla totalmente a lógica de negócio da forma de armazenamento.
+### 2. Service (`/service`) - Contratos de Operação
+É aqui que reside o coração do **Design by Contract**. Os serviços (`LoanService`, etc.) possuem pré e pós-condições detalhadas.
+* **Pré-condições:** O método de empréstimo exige que o usuário exista e que o livro tenha cópias disponíveis (`requires book.isAvailable();`).
+* **Pós-condições:** Garante que, após o empréstimo, o estoque do livro foi decrementado em 1 e o registro do empréstimo foi criado (`ensures book.getAvailableCopies() == \old(book.getAvailableCopies()) - 1;`).
 
-#### 3. Service (`/service`)
-
-* O **cérebro** da aplicação. Contém toda a lógica de negócio (Ex: `LoanService` verifica se um livro está disponível antes de pedir ao repositório para salvar um `Loan`).
-* **Boa Prática (Injeção de Dependência):** Os Serviços dependem apenas das *interfaces* dos repositórios, que são "injetadas" em seus construtores.
-* **Boa Prática (Responsabilidade Única - 'S' do SOLID):** Cada serviço tem uma responsabilidade clara (`UserService` cuida da lógica de usuário, `BookService` da de livros, e `LoanService` orquestra as operações entre eles).
-
-#### 4. DTO (Data Transfer Object) (`/dto`)
-
-* Classes "burras" usadas para **transferir dados** formatados ou agregados para a camada de visualização (Ex: `BookAvailabilityDTO`, `LoanReportDTO`), mantendo os relatórios limpos.
-
-#### 5. View (CLI) (`/cli` e `Library.java`)
-
-* A camada de **Visualização (View)** é composta pela classe `Library.java` (o "dispatcher" principal) e as classes no pacote `/cli`.
-* **Boa Prática (Responsabilidade Única - 'S' do SOLID):** A lógica de interação com o console foi separada em classes `*ConsoleHandler` (Ex: `BookConsoleHandler`, `LoanConsoleHandler`).
-* A `Library.java` é responsável apenas por inicializar o sistema e despachar as ações, enquanto os `Handlers` são responsáveis por coletar a entrada do usuário e formatar a saída.
+### 3. Repository (`/repository`)
+Define a abstração do acesso aos dados.
+* As interfaces foram anotadas com especificações `model` (campos fantasmas do JML) para simular o comportamento de armazenamento e permitir a verificação estática sem precisar de um banco de dados real.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-* **Java 21 (ou 17+)**
-* **Maven:** Para gerenciamento de dependências e build do projeto.
-* **Git & GitHub:** Para controle de versão e colaboração.
+* **Java 21:** Linguagem base.
+* **JML (Java Modeling Language):** Linguagem de especificação comportamental.
+* **OpenJML:** Ferramenta utilizada para checagem de sintaxe e verificação estática das anotações (ESC - Extended Static Checking).
+* **Maven:** Gerenciamento de dependências.
 
-## 🚀 Compilando o Projeto
+---
 
-O projeto utiliza Maven. Para compilar e gerar o pacote:
+## 🚀 Compilando e Verificando
 
-1.  Certifique-se de ter o [Java JDK 17+](https://www.oracle.com/java/technologies/downloads/) e o [Apache Maven](https://maven.apache.org/download.cgi) instalados e configurados no seu PATH.
-2.  Clone o repositório:
-    ```bash
-    git clone https://github.com/dcoelhosantos/library-loan-system.git
-    ```
-3.  Navegue até a pasta raiz do projeto:
-    ```bash
-    cd library-loan-system
-    ```
-4.  Execute o comando de build do Maven:
-    ```bash
-    mvn clean package
-    ```
-    Isso irá compilar o código, rodar os testes e criar um arquivo `.jar` no diretório `target/`.
+### 1. Compilação Java (Standard)
+Para compilar o projeto como um software Java comum:
 
-## 🏃‍♀️ Executando o Sistema
+```bash
+mvn clean package
+```
 
-Este projeto é uma aplicação de console (CLI). A forma mais fácil de executar é via Maven:
+2. Verificação com JML (Opcional)
+Caso tenha o OpenJML configurado em sua máquina, você pode verificar as especificações lógicas (exemplo de comando genérico):
 
-1.  No terminal, na raiz do projeto (`library-loan-system`), execute:
+```bash
+java -jar openjml.jar -rac -dirs src/main/java/br/ufrn/library
+```
 
-    ```bash
-    mvn exec:java -Dexec.mainClass="br.ufrn.library.Library"
-    ```
+# Ou para verificação estática (ESC):
 
-2.  (Alternativa) Você também pode executar o arquivo `.jar` gerado:
-    ```bash
-    # O nome do .jar pode variar. Verifique o nome real na pasta target/
-    # (Provavelmente será Library-1.0-SNAPSHOT.jar)
-    java -jar target/Library-1.0-SNAPSHOT.jar
-    ```
+```bash
+java -jar openjml.jar -esc -dirs src/main/java/br/ufrn/library
+```
 
-### Como Usar
+(Nota: As anotações JML estão dentro de comentários //@ ou /*@ ... @*/, portanto, não afetam a execução normal do Java se o compilador JML não for usado).
 
-Após iniciar, você verá um menu interativo.
+🏃‍♀️ Executando o Sistema
+Para testar a aplicação rodando (Runtime):
 
-**Importante:** Como não há banco de dados, o sistema começa vazio. **Use a Opção 9 ("Carregar Dados")** primeiro. Isso irá "semear" (seed) o sistema com 10 usuários, 20 livros e 13 empréstimos, permitindo que você teste imediatamente as funcionalidades de listagem e relatórios (Opções 5, 6, 7 e 8).
+No terminal, na raiz do projeto:
+
+```bash
+mvn exec:java -Dexec.mainClass="br.ufrn.library.Library"
+```
+Passo Recomendado: Ao iniciar, utilize a Opção 9 ("Carregar Dados") para popular o sistema com dados de teste e verificar se as regras de negócio (e suas especificações subjacentes) estão sendo respeitadas.
