@@ -4,14 +4,66 @@ import java.time.LocalDate;
 
 public class Loan {
 
+    // --- INVARIANTES DE ESTADO ---
+
+    /*@ public invariant id != null && id.length() > 0; @*/
+    /*@ spec_public @*/
     private String id;
+
+    /*@ public invariant user != null; @*/
+    /*@ spec_public @*/
     private User user;
+
+    /*@ public invariant book != null; @*/
+    /*@ spec_public @*/
     private Book book;
+
+    /*@ public invariant loanDate != null; @*/
+    /*@ spec_public @*/
     private LocalDate loanDate;
+
+    /*@ public invariant dueDate != null; @*/
+    /*@ spec_public @*/
     private LocalDate dueDate;
+
+    // A data de devolução pode ser nula (enquanto o empréstimo está ativo)
+    /*@ spec_public nullable @*/
     private LocalDate returnDate;
+
+    /*@ spec_public @*/
     private boolean isReturned;
 
+    // --- INVARIANTES LÓGICOS E TEMPORAIS ---
+
+    // 1. A data de vencimento nunca pode ser antes da data de empréstimo.
+    /*@ public invariant !dueDate.isBefore(loanDate); @*/
+
+    // 2. CONSISTÊNCIA: A flag isReturned deve estar sincronizada com a existência de returnDate.
+    // (isReturned é verdadeiro SE E SOMENTE SE returnDate não for nulo)
+    /*@ public invariant isReturned <==> returnDate != null; @*/
+
+    // 3. Se houver uma data de devolução, ela não pode ser antes da data de empréstimo.
+    /*@ public invariant returnDate != null ==> !returnDate.isBefore(loanDate); @*/
+
+    
+    /*@ public normal_behavior
+      @   requires id != null && id.trim().length() > 0;
+      @   requires user != null;
+      @   requires book != null;
+      @   requires loanDate != null;
+      @   requires dueDate != null;
+      @   // Validação temporal na entrada
+      @   requires !dueDate.isBefore(loanDate);
+      @
+      @   ensures this.id == id;
+      @   ensures this.user == user;
+      @   ensures this.book == book;
+      @   ensures this.loanDate == loanDate;
+      @   ensures this.dueDate == dueDate;
+      @   // Garante o estado inicial do empréstimo (ativo)
+      @   ensures this.returnDate == null;
+      @   ensures this.isReturned == false;
+      @*/
     public Loan(String id, User user, Book book, LocalDate loanDate, LocalDate dueDate) {
         if (id == null || id.trim().isEmpty()) {
             throw new IllegalArgumentException("Loan ID cannot be null or empty.");
@@ -41,6 +93,18 @@ public class Loan {
         this.isReturned = false;
     }
 
+    /*@ public normal_behavior
+      @   requires returnDate != null;
+      @   // A devolução não pode ser no passado (antes de ter pego o livro)
+      @   requires !returnDate.isBefore(this.loanDate);
+      @   // Só pode devolver se AINDA NÃO tiver sido devolvido
+      @   requires !this.isReturned;
+      @
+      @   assignable this.returnDate, this.isReturned;
+      @
+      @   ensures this.returnDate == returnDate;
+      @   ensures this.isReturned == true;
+      @*/
     public void markAsReturned(LocalDate returnDate) {
         if (returnDate == null) {
             throw new IllegalArgumentException("Return date cannot be null.");
@@ -56,41 +120,78 @@ public class Loan {
         this.isReturned = true;
     }
 
-    public boolean isOverdue(LocalDate currentDate) {
+    /*@ public normal_behavior
+      @   requires currentDate != null;
+      @   // O método é puro (apenas leitura)
+      @   assignable \nothing; 
+      @
+      @   // Definição lógica de atraso:
+      @   // Verdadeiro SE (não devolvido E data atual depois do vencimento)
+      @   ensures \result == (!isReturned && currentDate.isAfter(dueDate));
+      @*/
+    public /*@ pure @*/ boolean isOverdue(LocalDate currentDate) {
         if (currentDate == null) {
             throw new IllegalArgumentException("Current date cannot be null.");
         }
         return !isReturned && currentDate.isAfter(dueDate);
     }
 
-    public String getId() {
+    /*@ public normal_behavior
+      @   ensures \result == this.id;
+      @*/
+    public /*@ pure @*/ String getId() {
         return id;
     }
 
-    public User getUser() {
+    /*@ public normal_behavior
+      @   ensures \result == this.user;
+      @*/
+    public /*@ pure @*/ User getUser() {
         return user;
     }
 
-    public Book getBook() {
+    /*@ public normal_behavior
+      @   ensures \result == this.book;
+      @*/
+    public /*@ pure @*/ Book getBook() {
         return book;
     }
 
-    public LocalDate getLoanDate() {
+    /*@ public normal_behavior
+      @   ensures \result == this.loanDate;
+      @*/
+    public /*@ pure @*/ LocalDate getLoanDate() {
         return loanDate;
     }
 
-    public LocalDate getDueDate() {
+    /*@ public normal_behavior
+      @   ensures \result == this.dueDate;
+      @*/
+    public /*@ pure @*/ LocalDate getDueDate() {
         return dueDate;
     }
 
-    public LocalDate getReturnDate() {
+    /*@ public normal_behavior
+      @   ensures \result == this.returnDate;
+      @*/
+    public /*@ pure nullable @*/ LocalDate getReturnDate() {
         return returnDate;
     }
 
-    public boolean isReturned() {
+    /*@ public normal_behavior
+      @   ensures \result == this.isReturned;
+      @*/
+    public /*@ pure @*/ boolean isReturned() {
         return isReturned;
     }
 
+    // --- ESPECIFICAÇÕES DE OBJETOS COMUNS ---
+
+    // toString geralmente é 'assignable \nothing' e garante resultado não nulo
+    /*@ also
+      @   assignable \nothing;
+      @   ensures \result != null;
+      @*/
     @Override
     public String toString() {
         return "Loan{" +
@@ -104,8 +205,13 @@ public class Loan {
                 '}';
     }
 
+    /*@ also
+      @   ensures (o == null) ==> (\result == false);
+      @   ensures (this == o) ==> (\result == true);
+      @   ensures (o instanceof Loan) && ((Loan)o).getId().equals(this.id) ==> \result == true;
+      @*/
     @Override
-    public boolean equals(Object o) {
+    public /*@ pure @*/ boolean equals(Object o) {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
@@ -114,8 +220,11 @@ public class Loan {
         return id.equals(loan.id);
     }
 
+    /*@ also
+      @   ensures \result == id.hashCode();
+      @*/
     @Override
-    public int hashCode() {
+    public /*@ pure @*/ int hashCode() {
         return id.hashCode();
     }
 }

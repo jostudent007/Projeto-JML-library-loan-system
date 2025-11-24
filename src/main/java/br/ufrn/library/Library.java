@@ -15,19 +15,39 @@ import br.ufrn.library.service.BookService;
 import br.ufrn.library.service.LoanService;
 import br.ufrn.library.service.UserService;
 
-
 public class Library {
 
+    // --- ESPECIFICAÇÕES DE CAMPOS (State) ---
+
+    // O scanner é final e inicializado na declaração, então nunca é nulo.
+    /*@ public static invariant scanner != null; @*/
     private static final Scanner scanner = new Scanner(System.in);
     
+    // spec_public torna variáveis privadas visíveis para as especificações JML públicas.
+    // nullable é necessário porque elas começam como null antes do setupServices().
+    /*@ public static spec_public nullable BookService bookService; @*/
     private static BookService bookService;
+
+    /*@ public static spec_public nullable UserService userService; @*/
     private static UserService userService;
+
+    /*@ public static spec_public nullable LoanService loanService; @*/
     private static LoanService loanService;
 
+    /*@ public static spec_public nullable BookConsoleHandler bookHandler; @*/
     private static BookConsoleHandler bookHandler;
+
+    /*@ public static spec_public nullable UserConsoleHandler userHandler; @*/
     private static UserConsoleHandler userHandler;
+
+    /*@ public static spec_public nullable LoanConsoleHandler loanHandler; @*/
     private static LoanConsoleHandler loanHandler;
 
+    // --- MÉTODOS ---
+
+    /*@ public normal_behavior
+      @   assignable bookService, userService, loanService, bookHandler, userHandler, loanHandler;
+      @*/
     public static void main(String[] args) {
         setupServices();
         setupHandlers();
@@ -37,6 +57,15 @@ public class Library {
         System.out.println("Sistema finalizado.");
     }
 
+    /*@ public normal_behavior
+      @   // Este método pode modificar apenas os serviços
+      @   assignable userService, bookService, loanService;
+      @   
+      @   // Após a execução, garante que os serviços não são nulos
+      @   ensures userService != null;
+      @   ensures bookService != null;
+      @   ensures loanService != null;
+      @*/
     private static void setupServices() {
         UserRepository userRepo = new InMemoryUserRepository();
         BookRepository bookRepo = new InMemoryBookRepository();
@@ -47,30 +76,69 @@ public class Library {
         loanService = new LoanService(loanRepo, bookRepo, userRepo);
     }
 
+    /*@ public normal_behavior
+      @   // PRE-CONDIÇÃO: Os serviços JÁ devem ter sido iniciados antes de chamar os handlers
+      @   requires userService != null;
+      @   requires bookService != null;
+      @   requires loanService != null;
+      @   requires scanner != null;
+      @
+      @   // Este método modifica os handlers
+      @   assignable bookHandler, userHandler, loanHandler;
+      @
+      @   // PÓS-CONDIÇÃO: Garante que os handlers estão prontos para uso
+      @   ensures bookHandler != null;
+      @   ensures userHandler != null;
+      @   ensures loanHandler != null;
+      @*/
     private static void setupHandlers() {
         bookHandler = new BookConsoleHandler(bookService, scanner);
         userHandler = new UserConsoleHandler(userService, scanner);
         loanHandler = new LoanConsoleHandler(loanService, scanner);
     }
 
+    /*@ public normal_behavior
+      @   // Requer que tudo esteja configurado para rodar o loop
+      @   requires scanner != null;
+      @   requires bookHandler != null && userHandler != null && loanHandler != null;
+      @   // Como é um loop de UI, ele afeta "o mundo" (estado do sistema, console, etc)
+      @   assignable \everything;
+      @*/
     private static void runMenuLoop() {
         boolean running = true;
         while (running) {
             printMenu();
             try {
-                int choice = Integer.parseInt(scanner.nextLine());
-                running = dispatchMenuChoice(choice);
+                // Check if line exists to avoid NoSuchElementException if input stream is closed unexpectedly
+                if (scanner.hasNextLine()) { 
+                    String line = scanner.nextLine();
+                    // Basic validation before parsing
+                    if (line.matches("\\d+")) {
+                        int choice = Integer.parseInt(line);
+                        running = dispatchMenuChoice(choice);
+                    } else {
+                         System.err.println("Erro: Por favor, digite um número válido.");
+                    }
+                } else {
+                    running = false; // Exit if no input
+                }
             } catch (NumberFormatException e) {
                 System.err.println("Erro: Por favor, digite um número válido.");
             }
             
             if (running) {
                 System.out.println("\nPressione Enter para continuar...");
-                scanner.nextLine();
+                if (scanner.hasNextLine()) scanner.nextLine();
             }
         }
     }
 
+    // Métodos void que só imprimem na tela (IO) são difíceis de especificar formalmente com JML puro,
+    // então geralmente usamos "assignable \nothing" (não muda estado do objeto) 
+    // ou omitimos a especificação detalhada de IO.
+    /*@ public normal_behavior
+      @   assignable \nothing;
+      @*/
     private static void printMenu() {
         System.out.println("\n--- Sistema de Biblioteca ---");
         System.out.println("1. Cadastrar Livro");
@@ -86,6 +154,19 @@ public class Library {
         System.out.print("Escolha uma opção: ");
     }
 
+    /*@ public normal_behavior
+      @   requires bookHandler != null;
+      @   requires userHandler != null;
+      @   requires loanHandler != null;
+      @   // Pode modificar o estado de todo o sistema dependendo da escolha
+      @   assignable \everything; 
+      @   
+      @   // Exemplo de especificação por casos (opcional, mas ilustrativo):
+      @   // Se a escolha for 0, o resultado deve ser false (parar o loop)
+      @   ensures choice == 0 ==> \result == false;
+      @   // Se a escolha não for 0, o loop continua (geralmente)
+      @   ensures choice != 0 ==> \result == true;
+      @*/
     private static boolean dispatchMenuChoice(int choice) {
         try {
             switch (choice) {
@@ -114,7 +195,11 @@ public class Library {
                     loanHandler.handleLoanReport();
                     break;
                 case 9:
-                    DataLoader.seed(userService, bookService, loanService);
+                    // Verifica null pointer para os serviços aqui se necessário, 
+                    // mas a precondição do main já deveria cobrir
+                    if (userService != null && bookService != null && loanService != null) {
+                         DataLoader.seed(userService, bookService, loanService);
+                    }
                     break;
                 case 0:
                     return false;
