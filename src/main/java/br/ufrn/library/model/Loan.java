@@ -138,8 +138,9 @@ public class Loan {
 
     /*@ public normal_behavior
       @   ensures \result == this.id;
+      @   assignable \nothing;
       @*/
-    public /*@ pure @*/ String getId() {
+    public /*@ pure @*/ String getId() { // <--- Assegure-se que este está presente
         return id;
     }
 
@@ -208,7 +209,7 @@ public class Loan {
     /*@ also
       @   ensures (o == null) ==> (\result == false);
       @   ensures (this == o) ==> (\result == true);
-      @   ensures (o instanceof Loan) && ((Loan)o).getId().equals(this.id) ==> \result == true;
+      @   ensures (o instanceof Loan) && ((Loan)o).id.equals(this.id) ==> \result == true;
       @*/
     @Override
     public /*@ pure @*/ boolean equals(Object o) {
