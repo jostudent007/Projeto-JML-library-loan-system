@@ -108,10 +108,9 @@ public class PhysicalBook extends Book {
       @   // 1. O novo total não pode ser negativo
       @   requires newTotalCopies >= 0;
       @   
-      @   // 2. Definição auxiliar para clareza: livros emprestados
-      @   // old(loaned) = old(total) - old(available)
+      @   // 2. Definição auxiliar para clareza: livros emprestados (no pré-estado)
       @   // O novo total deve ser suficiente para cobrir os livros que já estão emprestados.
-      @   requires newTotalCopies >= (\old(totalCopies) - \old(availableCopies));
+      @   requires newTotalCopies >= (totalCopies - availableCopies); // <-- REMOVIDO o \old
       @
       @   assignable totalCopies, availableCopies;
       @

@@ -80,8 +80,11 @@ public class User {
 
     /*@ public normal_behavior
       @   ensures \result == this.id;
+      @   assignable \nothing;
       @*/
-    public /*@ pure @*/ String getId() { return id; }
+    public /*@ pure @*/ String getId() {
+        return id;
+    }
     
     /*@ public normal_behavior
       @   ensures \result == this.name;
@@ -109,7 +112,7 @@ public class User {
       @   // Se for o mesmo objeto (referência), retorna true
       @   ensures (this == o) ==> (\result == true);
       @   // Se for da mesma classe e tiver o mesmo ID, retorna true
-      @   ensures (o instanceof User) && ((User)o).getId().equals(this.id) ==> \result == true;
+      @   ensures (o instanceof User) && ((User)o).id.equals(this.id) ==> \result == true;
       @*/
     @Override
     public /*@ pure @*/ boolean equals(Object o) {
