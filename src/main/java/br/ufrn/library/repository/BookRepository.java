@@ -1,14 +1,20 @@
 package br.ufrn.library.repository;
 
+import br.ufrn.library.model.Book;
 import java.util.List;
 import java.util.Optional;
 
-import br.ufrn.library.model.Book;
-
 public interface BookRepository {
-    Book save(Book book);
+    
+    /*@ pure @*/
+    boolean existsByIsbn(String isbn);
+
+    /*@ pure @*/
     Optional<Book> findByIsbn(String isbn);
+
+    /*@ pure @*/ // <--- ADD THIS
     List<Book> findAll();
-    boolean deleteByIsbn(String isbn);
-    boolean existsByIsbn(String isbn); 
+    
+    Book save(Book book);
+    void deleteByIsbn(String isbn);
 }

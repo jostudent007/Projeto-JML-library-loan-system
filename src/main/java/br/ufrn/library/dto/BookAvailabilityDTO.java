@@ -17,8 +17,12 @@ public class BookAvailabilityDTO {
         this.title = book.getTitle();
         this.author = book.getAuthor();
 
-        if (book instanceof PhysicalBook physicalBook) {
+        // Alterado para cast tradicional para evitar erro de parser do OpenJML
+        if (book instanceof PhysicalBook) {
+            PhysicalBook physicalBook = (PhysicalBook) book;
             this.type = "Físico";
+            // Nota: Concatenação de string em construtor puro pode ser lenta no JML, 
+            // mas é válida se os getters forem puros.
             this.availability = physicalBook.getAvailableCopies() + " / " + physicalBook.getTotalCopies();
         } else if (book instanceof DigitalBook) {
             this.type = "Digital";
@@ -29,23 +33,9 @@ public class BookAvailabilityDTO {
         }
     }
 
-    public String getIsbn() {
-        return isbn;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public String getAvailability() {
-        return availability;
-    }
+    public String getIsbn() { return isbn; }
+    public String getTitle() { return title; }
+    public String getAuthor() { return author; }
+    public String getType() { return type; }
+    public String getAvailability() { return availability; }
 }

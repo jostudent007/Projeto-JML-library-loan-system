@@ -15,27 +15,34 @@ public class BookConsoleHandler {
     }
 
     public void handleRegisterBook() {
-        System.out.println("\n--- 1. Cadastrar Livro ---");
-        System.out.print("Tipo (1-Físico, 2-Digital): ");
-        int type = Integer.parseInt(scanner.nextLine());
-        
-        System.out.print("Título: ");
-        String title = scanner.nextLine();
-        System.out.print("Autor: ");
-        String author = scanner.nextLine();
-        System.out.print("ISBN: ");
-        String isbn = scanner.nextLine();
+        try {
+            System.out.println("\n--- 1. Cadastrar Livro ---");
+            System.out.print("Tipo (1-Físico, 2-Digital): ");
+            String typeInput = scanner.nextLine();
+            int type = Integer.parseInt(typeInput);
+            
+            System.out.print("Título: ");
+            String title = scanner.nextLine();
+            System.out.print("Autor: ");
+            String author = scanner.nextLine();
+            System.out.print("ISBN: ");
+            String isbn = scanner.nextLine();
 
-        if (type == 1) {
-            System.out.print("Quantidade de Cópias: ");
-            int copies = Integer.parseInt(scanner.nextLine());
-            bookService.registerPhysicalBook(title, author, isbn, copies);
-            System.out.println("Livro Físico cadastrado com sucesso!");
-        } else if (type == 2) {
-            bookService.registerDigitalBook(title, author, isbn);
-            System.out.println("Livro Digital cadastrado com sucesso!");
-        } else {
-            System.err.println("Tipo inválido.");
+            if (type == 1) {
+                System.out.print("Quantidade de Cópias: ");
+                int copies = Integer.parseInt(scanner.nextLine());
+                bookService.registerPhysicalBook(title, author, isbn, copies);
+                System.out.println("Livro Físico cadastrado com sucesso!");
+            } else if (type == 2) {
+                bookService.registerDigitalBook(title, author, isbn);
+                System.out.println("Livro Digital cadastrado com sucesso!");
+            } else {
+                System.err.println("Tipo inválido.");
+            }
+        } catch (NumberFormatException e) {
+            System.err.println("Erro: Digite um número válido.");
+        } catch (Exception e) {
+            System.err.println("Erro ao cadastrar: " + e.getMessage());
         }
     }
 

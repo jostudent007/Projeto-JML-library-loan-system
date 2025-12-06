@@ -29,10 +29,11 @@ public class InMemoryUserRepository implements UserRepository {
         return new ArrayList<>(database.values());
     }
 
-    @Override
+    /*@Override
     public boolean deleteById(String id) {
         return database.remove(id) != null;
     }
+    */
     
     @Override
     public boolean existsById(String id) {

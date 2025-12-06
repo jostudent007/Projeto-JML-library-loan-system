@@ -29,9 +29,10 @@ public class InMemoryBookRepository implements BookRepository {
         return new ArrayList<>(database.values());
     }
 
+    // CORREÇÃO: Alterado de boolean para void para bater com a Interface
     @Override
-    public boolean deleteByIsbn(String isbn) {
-        return database.remove(isbn) != null;
+    public void deleteByIsbn(String isbn) {
+        database.remove(isbn);
     }
 
     @Override
