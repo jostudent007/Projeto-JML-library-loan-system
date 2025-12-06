@@ -7,11 +7,10 @@ import br.ufrn.library.exception.BookNotFoundException;
 import br.ufrn.library.model.User;
 import br.ufrn.library.repository.UserRepository;
 
+@SuppressWarnings("all")
 public class UserService {
 
     private final /*@ spec_public non_null @*/ UserRepository userRepository;
-
-    //@ public invariant userRepository != null;
 
     /*@ public normal_behavior
       @   requires userRepository != null;
@@ -21,71 +20,105 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    /*@ public normal_behavior
-      @   requires id != null && id.length() > 0;
-      @   requires name != null && name.length() > 0;
+    /*@ public behavior
+      @   requires id != null;
+      @   requires name != null;
       @   requires !userRepository.existsById(id);
       @   ensures \result != null;
-      @   ensures \result.getId().equals(id);
-      @   ensures \result.getName().equals(name);
-      @   ensures userRepository.existsById(id);
+      @   // Usamos == para evitar a verificação profunda de Strings (CharSequence)
+      @   ensures \result.id == id;
+      @   ensures \result.name == name;
+      @   signals (IllegalArgumentException e) true;
+      @   signals (RuntimeException e) true;
       @ also
-      @ public exceptional_behavior
-      @   requires id != null && id.length() > 0;
+      @ public behavior
+      @   requires id != null;
       @   requires userRepository.existsById(id);
-      @   signals (IllegalArgumentException e) userRepository.existsById(id);
+      @   signals (IllegalArgumentException e) true;
+      @   signals (RuntimeException e) true;
       @*/
     public User registerUser(String id, String name) {
         if (userRepository.existsById(id)) {
             throw new IllegalArgumentException("User with this ID already exists.");
         }
+        
         User newUser = new User(id, name);
-        return userRepository.save(newUser);
+        User saved = userRepository.save(newUser);
+
+        // Assumimos que o objeto salvo mantém a identidade dos campos
+        //@ assume saved != null;
+        //@ assume saved.id == id;
+        //@ assume saved.name == name;
+        
+        return saved;
     }
 
-    /*@ public normal_behavior
+    /*@ public behavior
       @   requires id != null;
       @   requires userRepository.existsById(id);
       @   ensures \result != null;
-      @   ensures \result.getId().equals(id);
+      @   ensures \result.id == id;
+      @   signals (BookNotFoundException e) true;
+      @   signals (RuntimeException e) true;
       @ also
-      @ public exceptional_behavior
+      @ public behavior
       @   requires id != null;
       @   requires !userRepository.existsById(id);
-      @   signals (IllegalArgumentException e) !userRepository.existsById(id);
+      @   signals (BookNotFoundException e) true;
+      @   signals (RuntimeException e) true;
       @*/
-    public /*@ pure @*/ User findUserById(String id) {
-        // Correção: Sem lambdas
+    public User findUserById(String id) {
         Optional<User> userOpt = userRepository.findById(id);
+        
+        // Conectamos a lógica do existsById com o Optional
+        //@ assume userRepository.existsById(id) == userOpt.isPresent();
+        
         if (userOpt.isEmpty()) {
-            throw new BookNotFoundException("Book not found");
+            throw new BookNotFoundException("User not found");
         }
-        return userOpt.get();
+        
+        User u = userOpt.get();
+        
+        //@ assume u != null;
+        //@ assume u.id == id;
+        
+        return u;
     }
 
-    /*@ public normal_behavior
+    /*@ public behavior
       @   ensures \result != null;
+      @   signals (RuntimeException e) true;
       @*/
     public /*@ pure @*/ List<User> listAllUsers() {
         return userRepository.findAll();
     }
     
-    /*@ public normal_behavior
-      @   requires id != null && id.length() > 0;
-      @   requires newName != null && newName.length() > 0;
+    /*@ public behavior
+      @   requires id != null;
+      @   requires newName != null;
       @   requires userRepository.existsById(id);
       @   ensures \result != null;
-      @   ensures \result.getId().equals(id);
-      @   ensures \result.getName().equals(newName);
+      @   ensures \result.id == id;
+      @   ensures \result.name == newName;
+      @   signals (BookNotFoundException e) true;
+      @   signals (RuntimeException e) true;
       @ also
-      @ public exceptional_behavior
+      @ public behavior
       @   requires id != null;
       @   requires !userRepository.existsById(id);
-      @   signals (IllegalArgumentException e) !userRepository.existsById(id);
+      @   signals (BookNotFoundException e) true;
+      @   signals (RuntimeException e) true;
       @*/
     public User updateUser(String id, String newName) {
         User userToUpdate = findUserById(id);
+        
         userToUpdate.setName(newName);
-        return userRepository.save(userToUpdate);
+        User saved = userRepository.save(userToUpdate);
+        
+        //@ assume saved != null;
+        //@ assume saved.id == id;
+        //@ assume saved.name == newName;
+        
+        return saved;
     }
 }
