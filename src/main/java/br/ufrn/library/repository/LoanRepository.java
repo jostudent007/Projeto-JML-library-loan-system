@@ -1,17 +1,24 @@
 package br.ufrn.library.repository;
 
+import br.ufrn.library.model.Loan;
 import java.util.List;
 import java.util.Optional;
-import br.ufrn.library.model.Loan;
 
 public interface LoanRepository {
-    Loan save(Loan loan);
-    Optional<Loan> findById(String id);
-    List<Loan> findAll();
-    List<Loan> findByUserId(String userId);
-    List<Loan> findByBookIsbn(String isbn);
-    List<Loan> findActiveByUserId(String userId);
-    List<Loan> findAllActive();
-    boolean deleteById(String id);
+    
+    /*@ pure @*/
     boolean existsById(String id);
+
+    /*@ pure @*/
+    Optional<Loan> findById(String id);
+    
+    // Métodos de busca específicos
+    /*@ pure @*/ List<Loan> findByUserId(String userId);
+    /*@ pure @*/ List<Loan> findActiveByUserId(String userId);
+    /*@ pure @*/ List<Loan> findByBookIsbn(String isbn);
+    /*@ pure @*/ List<Loan> findAllActive();
+    /*@ pure @*/ List<Loan> findAll();
+    
+    Loan save(Loan loan);
+    
 }

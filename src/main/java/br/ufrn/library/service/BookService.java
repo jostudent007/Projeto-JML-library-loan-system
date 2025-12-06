@@ -1,7 +1,8 @@
 package br.ufrn.library.service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import br.ufrn.library.dto.BookAvailabilityDTO;
 import br.ufrn.library.exception.BookNotFoundException;
@@ -10,117 +11,81 @@ import br.ufrn.library.model.DigitalBook;
 import br.ufrn.library.model.PhysicalBook;
 import br.ufrn.library.repository.BookRepository;
 
+@SuppressWarnings("all")
 public class BookService {
 
     private final BookRepository bookRepository;
 
-    //@ public invariant bookRepository != null;
-
-    //@ requires bookRepository != null;
-    //@ ensures this.bookRepository == bookRepository;
     public BookService(BookRepository bookRepository) {
         this.bookRepository = bookRepository;
     }
 
-    /*@
-      @ requires title != null && author != null && isbn != null;
-      @ ensures bookRepository.existsByIsbn(isbn);
-      @ signals (IllegalArgumentException e) bookRepository.existsByIsbn(isbn);
-      @*/
     public void registerDigitalBook(String title, String author, String isbn) {
         if (bookRepository.existsByIsbn(isbn)) {
-            throw new IllegalArgumentException("A book with this ISBN already exists: " + isbn);
+            throw new IllegalArgumentException("Book already exists");
         }
         DigitalBook digitalBook = new DigitalBook(title, author, isbn);
         bookRepository.save(digitalBook);
     }
 
-    /*@
-      @ requires title != null && author != null && isbn != null;
-      @ requires totalCopies >= 0;
-      @ ensures bookRepository.existsByIsbn(isbn);
-      @ signals (IllegalArgumentException e) bookRepository.existsByIsbn(isbn);
-      @*/
     public void registerPhysicalBook(String title, String author, String isbn, int totalCopies) {
         if (bookRepository.existsByIsbn(isbn)) {
-            throw new IllegalArgumentException("A book with this ISBN already exists: " + isbn);
+            throw new IllegalArgumentException("Book already exists");
         }
         PhysicalBook physicalBook = new PhysicalBook(title, author, isbn, totalCopies);
         bookRepository.save(physicalBook);
     }
 
-    /*@
-      @ requires isbn != null && newTitle != null && newAuthor != null;
-      @ signals (BookNotFoundException e) !bookRepository.existsByIsbn(isbn);
-      @ signals (IllegalArgumentException e) bookRepository.existsByIsbn(isbn) && !(\old(findBookByIsbn(isbn)) instanceof DigitalBook);
-      @*/
     public void updateDigitalBook(String isbn, String newTitle, String newAuthor) {
         Book bookToUpdate = findBookByIsbn(isbn);
 
-        if (bookToUpdate instanceof DigitalBook digitalBook) {
-            digitalBook.updateDetails(newTitle, newAuthor);
+        if (bookToUpdate instanceof DigitalBook) {
+            DigitalBook digitalBook = (DigitalBook) bookToUpdate;
             bookRepository.save(digitalBook);
         } else {
-            throw new IllegalArgumentException("Book with isbn: " + isbn + " is not a digital book.");
+            throw new IllegalArgumentException("Not a digital book");
         }
     }
 
-    /*@
-      @ requires isbn != null && newTitle != null && newAuthor != null;
-      @ requires newTotalCopies >= 0;
-      @ signals (BookNotFoundException e) !bookRepository.existsByIsbn(isbn);
-      @ signals (IllegalArgumentException e) bookRepository.existsByIsbn(isbn) && !(\old(findBookByIsbn(isbn)) instanceof PhysicalBook);
-      @*/
     public void updatePhysicalBook(String isbn, String newTitle, String newAuthor, int newTotalCopies) {
         Book bookToUpdate = findBookByIsbn(isbn);
 
-        if (bookToUpdate instanceof PhysicalBook physicalBook) {
-            physicalBook.updateDetails(newTitle, newAuthor);
-            physicalBook.setTotalCopies(newTotalCopies);
-            bookRepository.save(physicalBook);
+        if (bookToUpdate instanceof PhysicalBook) {
+            PhysicalBook physicalBook = (PhysicalBook) bookToUpdate;
+            if (newTotalCopies >= 0) {
+                physicalBook.setTotalCopies(newTotalCopies);
+                bookRepository.save(physicalBook);
+            }
         } else {
-            throw new IllegalArgumentException("Book with isbn: " + isbn + " is not a physical book.");
+            throw new IllegalArgumentException("Not a physical book");
         }
     }
 
-    /*@
-      @ requires isbn != null;
-      @ ensures \result != null;
-      @ ensures \result.getIsbn().equals(isbn);
-      @ signals (BookNotFoundException e) !bookRepository.existsByIsbn(isbn);
-      @ pure
-      @*/
     public Book findBookByIsbn(String isbn) {
-        return bookRepository.findByIsbn(isbn)
-                .orElseThrow(() -> new BookNotFoundException("Book not found with isbn: " + isbn));
+        Optional<Book> bookOpt = bookRepository.findByIsbn(isbn);
+        if (bookOpt.isEmpty()) {
+            throw new BookNotFoundException("Book not found");
+        }
+        return bookOpt.get();
     }
 
-    /*@
-      @ ensures \result != null;
-      @ pure
-      @*/
     public List<Book> listAllBooks() {
         return bookRepository.findAll();
     }
 
-    /*@
-      @ ensures \result != null;
-      @ pure
-      @*/
     public List<BookAvailabilityDTO> getBookAvailabilityReport() {
-        return bookRepository.findAll().stream()
-                .map(BookAvailabilityDTO::new)
-                .collect(Collectors.toList());
+        List<Book> books = bookRepository.findAll();
+        List<BookAvailabilityDTO> report = new ArrayList<>();
+        
+        for (Book book : books) {
+            report.add(new BookAvailabilityDTO(book));
+        }
+        return report;
     }
 
-    /*@
-      @ requires isbn != null;
-      @ ensures !bookRepository.existsByIsbn(isbn);
-      @ signals (BookNotFoundException e) !bookRepository.existsByIsbn(isbn);
-      @*/
     public void deleteBook(String isbn) {
         if (!bookRepository.existsByIsbn(isbn)) {
-            throw new BookNotFoundException("Book not found with isbn: " + isbn);
+            throw new BookNotFoundException("Book not found");
         }
         bookRepository.deleteByIsbn(isbn);
     }

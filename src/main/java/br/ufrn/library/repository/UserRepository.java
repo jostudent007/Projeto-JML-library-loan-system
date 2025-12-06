@@ -1,15 +1,18 @@
 package br.ufrn.library.repository;
 
+import br.ufrn.library.model.User;
 import java.util.List;
 import java.util.Optional;
 
-import br.ufrn.library.model.User;
-
 public interface UserRepository {
+    
+    /*@ pure @*/
+    boolean existsById(String id);
+
+    /*@ pure @*/
+    Optional<User> findById(String id);
 
     User save(User user);
-    Optional<User> findById(String id);
-    List<User> findAll();
-    boolean deleteById(String id);
-    boolean existsById(String id);
+    
+    /*@ pure @*/ List<User> findAll();
 }

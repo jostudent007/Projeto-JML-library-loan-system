@@ -61,11 +61,12 @@ public class InMemoryLoanRepository implements LoanRepository {
                 .collect(Collectors.toList());
     }
 
-    @Override
+    /*@Override
     public boolean deleteById(String id) {
         return database.remove(id) != null;
     }
-
+    */
+   
     @Override
     public boolean existsById(String id) {
         return database.containsKey(id);

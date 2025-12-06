@@ -1,9 +1,9 @@
 package br.ufrn.library.exception;
 
 public class NoCopiesAvailableException extends RuntimeException {
-
     private static final long serialVersionUID = 1L;
 
+    /*@ pure @*/
     public NoCopiesAvailableException(String message) {
         super(message);
     }
