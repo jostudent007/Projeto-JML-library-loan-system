@@ -12,13 +12,21 @@ public interface LoanRepository {
     /*@ pure @*/
     Optional<Loan> findById(String id);
     
-    // Métodos de busca específicos
-    /*@ pure @*/ List<Loan> findByUserId(String userId);
-    /*@ pure @*/ List<Loan> findActiveByUserId(String userId);
-    /*@ pure @*/ List<Loan> findByBookIsbn(String isbn);
-    /*@ pure @*/ List<Loan> findAllActive();
-    /*@ pure @*/ List<Loan> findAll();
+    // Métodos de busca específicos para listas
+    /*@ pure @*/ 
+    List<Loan> findByUserId(String userId);
+    
+    /*@ pure @*/ 
+    List<Loan> findActiveByUserId(String userId);
+    
+    /*@ pure @*/ 
+    List<Loan> findByBookIsbn(String isbn);
+    
+    /*@ pure @*/ 
+    List<Loan> findAllActive();
+    
+    /*@ pure @*/ 
+    List<Loan> findAll();
     
     Loan save(Loan loan);
-    
 }

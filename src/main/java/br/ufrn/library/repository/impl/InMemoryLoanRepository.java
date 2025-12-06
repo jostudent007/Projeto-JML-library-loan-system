@@ -15,17 +15,22 @@ public class InMemoryLoanRepository implements LoanRepository {
     private static final Map<String, Loan> database = new ConcurrentHashMap<>();
 
     @Override
+    public boolean existsById(String id) {
+        return database.containsKey(id);
+    }
+
+    @Override
+    public Optional<Loan> findById(String id) {
+        return Optional.ofNullable(database.get(id));
+    }
+
+    @Override
     public Loan save(Loan loan) {
         if (loan == null) {
             throw new IllegalArgumentException("Loan cannot be null.");
         }
         database.put(loan.getId(), loan);
         return loan;
-    }
-
-    @Override
-    public Optional<Loan> findById(String id) {
-        return Optional.ofNullable(database.get(id));
     }
 
     @Override
@@ -41,16 +46,16 @@ public class InMemoryLoanRepository implements LoanRepository {
     }
 
     @Override
-    public List<Loan> findByBookIsbn(String isbn) {
+    public List<Loan> findActiveByUserId(String userId) {
         return database.values().stream()
-                .filter(loan -> loan.getBook().getIsbn().equals(isbn))
+                .filter(loan -> loan.getUser().getId().equals(userId) && !loan.isReturned())
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Loan> findActiveByUserId(String userId) {
+    public List<Loan> findByBookIsbn(String isbn) {
         return database.values().stream()
-                .filter(loan -> loan.getUser().getId().equals(userId) && !loan.isReturned())
+                .filter(loan -> loan.getBook().getIsbn().equals(isbn))
                 .collect(Collectors.toList());
     }
 
@@ -59,16 +64,5 @@ public class InMemoryLoanRepository implements LoanRepository {
         return database.values().stream()
                 .filter(loan -> !loan.isReturned())
                 .collect(Collectors.toList());
-    }
-
-    /*@Override
-    public boolean deleteById(String id) {
-        return database.remove(id) != null;
-    }
-    */
-   
-    @Override
-    public boolean existsById(String id) {
-        return database.containsKey(id);
     }
 }

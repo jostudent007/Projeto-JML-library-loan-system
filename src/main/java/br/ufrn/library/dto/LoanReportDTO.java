@@ -13,8 +13,7 @@ public class LoanReportDTO {
         this.totalLoans = totalLoans;
         this.loansPerBook = loansPerBook;
     }
-    /*@ pure @*/
-    public long getTotalLoans() { return totalLoans; }
-    /*@ pure @*/
-    public Map<Book, Long> getLoansPerBook() { return loansPerBook; }
+    
+    /*@ pure @*/ public long getTotalLoans() { return totalLoans; }
+    /*@ pure @*/ public Map<Book, Long> getLoansPerBook() { return loansPerBook; }
 }

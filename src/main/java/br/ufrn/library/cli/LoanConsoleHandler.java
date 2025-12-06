@@ -32,7 +32,6 @@ public class LoanConsoleHandler {
             System.out.print("ISBN do Livro: ");
             String isbn = scanner.nextLine();
 
-            // Service validado pelo JML
             loanService.createLoan(loanId, userId, isbn);
             System.out.println("Empréstimo realizado com sucesso!");
 
@@ -47,8 +46,7 @@ public class LoanConsoleHandler {
             System.out.print("ID do Empréstimo: ");
             String loanId = scanner.nextLine();
 
-            // CORREÇÃO: Passando a data atual explicitamente para casar com o Service
-            loanService.returnLoan(loanId, LocalDate.now()); 
+            loanService.returnLoan(loanId, LocalDate.now());
             System.out.println("Devolução registrada com sucesso!");
 
         } catch (Exception e) {

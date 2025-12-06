@@ -12,9 +12,10 @@ public interface BookRepository {
     /*@ pure @*/
     Optional<Book> findByIsbn(String isbn);
 
-    /*@ pure @*/ // <--- ADD THIS
+    /*@ pure @*/
     List<Book> findAll();
     
     Book save(Book book);
+    
     void deleteByIsbn(String isbn);
 }

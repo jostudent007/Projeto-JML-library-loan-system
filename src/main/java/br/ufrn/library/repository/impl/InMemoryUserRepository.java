@@ -14,9 +14,8 @@ public class InMemoryUserRepository implements UserRepository {
     private static final Map<String, User> database = new ConcurrentHashMap<>();
 
     @Override
-    public User save(User user) {
-        database.put(user.getId(), user);
-        return user;
+    public boolean existsById(String id) {
+        return database.containsKey(id);
     }
 
     @Override
@@ -25,18 +24,13 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     @Override
-    public List<User> findAll() {
-        return new ArrayList<>(database.values());
+    public User save(User user) {
+        database.put(user.getId(), user);
+        return user;
     }
 
-    /*@Override
-    public boolean deleteById(String id) {
-        return database.remove(id) != null;
-    }
-    */
-    
     @Override
-    public boolean existsById(String id) {
-        return database.containsKey(id);
+    public List<User> findAll() {
+        return new ArrayList<>(database.values());
     }
 }

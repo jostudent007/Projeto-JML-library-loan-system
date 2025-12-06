@@ -14,9 +14,8 @@ public class InMemoryBookRepository implements BookRepository {
     private static final Map<String, Book> database = new ConcurrentHashMap<>();
 
     @Override
-    public Book save(Book book) {
-        database.put(book.getIsbn(), book);
-        return book;
+    public boolean existsByIsbn(String isbn) {
+        return database.containsKey(isbn);
     }
 
     @Override
@@ -29,14 +28,14 @@ public class InMemoryBookRepository implements BookRepository {
         return new ArrayList<>(database.values());
     }
 
-    // CORREÇÃO: Alterado de boolean para void para bater com a Interface
     @Override
-    public void deleteByIsbn(String isbn) {
-        database.remove(isbn);
+    public Book save(Book book) {
+        database.put(book.getIsbn(), book);
+        return book;
     }
 
     @Override
-    public boolean existsByIsbn(String isbn) {
-        return database.containsKey(isbn);
+    public void deleteByIsbn(String isbn) {
+        database.remove(isbn);
     }
 }

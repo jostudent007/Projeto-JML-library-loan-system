@@ -12,7 +12,8 @@ public interface UserRepository {
     /*@ pure @*/
     Optional<User> findById(String id);
 
+    /*@ pure @*/
+    List<User> findAll();
+
     User save(User user);
-    
-    /*@ pure @*/ List<User> findAll();
 }

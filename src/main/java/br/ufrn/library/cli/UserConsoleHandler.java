@@ -40,7 +40,6 @@ public class UserConsoleHandler {
         }
 
         for (User user : users) {
-            // Imprimindo campos manualmente pois removemos o toString complexo do Model
             System.out.printf("  -> [%s] %s\n", user.getId(), user.getName());
         }
     }
