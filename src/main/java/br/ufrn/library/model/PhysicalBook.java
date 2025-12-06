@@ -2,9 +2,24 @@ package br.ufrn.library.model;
 
 public class PhysicalBook extends Book {
     
+    /*@ public invariant totalCopies >= 0; @*/
+    /*@ public invariant availableCopies >= 0; @*/
+    /*@ public invariant availableCopies <= totalCopies; @*/
+    
     /*@ spec_public @*/ private int totalCopies;
     /*@ spec_public @*/ private int availableCopies;
 
+    /*@ public normal_behavior
+      @   requires title != null && title.length() > 0;
+      @   requires author != null && author.length() > 0;
+      @   requires isbn != null && isbn.length() > 0;
+      @   requires totalCopies >= 0;
+      @   ensures this.title == title;
+      @   ensures this.author == author;
+      @   ensures this.isbn == isbn;
+      @   ensures this.totalCopies == totalCopies;
+      @   ensures this.availableCopies == totalCopies;
+      @*/
     public PhysicalBook(String title, String author, String isbn, int totalCopies) {
         super(title, author, isbn);
         
@@ -16,11 +31,20 @@ public class PhysicalBook extends Book {
         this.availableCopies = totalCopies;
     }
 
+    /*@ also
+      @   ensures \result == (availableCopies > 0);
+      @*/
     @Override
-    public boolean isAvailableForLoan() {
+    public /*@ pure @*/ boolean isAvailableForLoan() {
         return availableCopies > 0;
     }
 
+    /*@ also
+      @   requires availableCopies > 0;
+      @   assignable availableCopies;
+      @   ensures availableCopies == \old(availableCopies) - 1;
+      @   ensures totalCopies == \old(totalCopies);
+      @*/
     @Override
     public void registerLoan() {
         if (availableCopies > 0) {
@@ -30,6 +54,11 @@ public class PhysicalBook extends Book {
         }
     }
 
+    /*@ also
+      @   assignable availableCopies;
+      @   ensures \old(availableCopies) < totalCopies ==> availableCopies == \old(availableCopies) + 1;
+      @   ensures \old(availableCopies) == totalCopies ==> availableCopies == \old(availableCopies);
+      @*/
     @Override
     public void registerReturn() {
         if (this.availableCopies < this.totalCopies) {
@@ -37,20 +66,32 @@ public class PhysicalBook extends Book {
         }
     }
 
-    public int getTotalCopies() {
+    /*@ public normal_behavior
+      @   ensures \result == totalCopies;
+      @*/
+    public /*@ pure @*/ int getTotalCopies() {
         return totalCopies;
     }
 
-    public int getAvailableCopies() {
+    /*@ public normal_behavior
+      @   ensures \result == availableCopies;
+      @*/
+    public /*@ pure @*/ int getAvailableCopies() {
         return availableCopies;
     }
 
+    /*@ public normal_behavior
+      @   requires newTotalCopies >= 0;
+      @   requires newTotalCopies >= (totalCopies - availableCopies);
+      @   assignable totalCopies, availableCopies;
+      @   ensures totalCopies == newTotalCopies;
+      @   ensures availableCopies == newTotalCopies - (\old(totalCopies) - \old(availableCopies));
+      @*/
     public void setTotalCopies(int newTotalCopies) {
         if (newTotalCopies < 0) {
             throw new IllegalArgumentException("Total copies cannot be negative.");
         }
 
-        //@ assume this.totalCopies >= 0 && this.availableCopies >= 0;
         int loanedCopies = this.totalCopies - this.availableCopies;
 
         if (newTotalCopies < loanedCopies) {
@@ -58,7 +99,6 @@ public class PhysicalBook extends Book {
         }
 
         this.totalCopies = newTotalCopies;
-        //@ assume loanedCopies >= 0;
         this.availableCopies = newTotalCopies - loanedCopies;
     }
 }

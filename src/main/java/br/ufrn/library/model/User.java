@@ -1,19 +1,19 @@
 package br.ufrn.library.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class User {
 
     /*@ public invariant id != null && id.length() > 0; @*/
-    /*@ spec_public non_null @*/ 
-    private final String id;
-    
-    /*@ spec_public non_null @*/ 
-    private String name;
-    
-    /*@ spec_public non_null @*/ 
-    private List<Loan> loanHistory;
+    /*@ spec_public @*/ private final String id;
+
+    /*@ public invariant name != null && name.length() > 0; @*/
+    /*@ spec_public @*/ private String name;
+
+    /*@ public invariant loanHistory != null; @*/
+    /*@ spec_public @*/ private List<Loan> loanHistory;
 
     /*@ public normal_behavior
       @   requires id != null && id.length() > 0;
@@ -39,20 +39,37 @@ public class User {
 
     /*@ public normal_behavior
       @   requires loan != null;
-      @   assignable \everything; // Permite alteração do estado interno da lista
+      @   // CORREÇÃO: \everything permite que o método altere o conteúdo interno da lista
+      @   assignable \everything; 
       @   ensures loanHistory.contains(loan);
       @*/
     public void addLoanToHistory(Loan loan) {
         this.loanHistory.add(loan);
     }
 
-    /*@ pure @*/
-    public String getId() { return id; }
+    // --- GETTERS PUROS ---
 
+    /*@ public normal_behavior
+      @   ensures \result == this.id;
+      @*/
     /*@ pure @*/
-    public String getName() { return name; }
+    public String getId() {
+        return id;
+    }
+    
+    /*@ public normal_behavior
+      @   ensures \result == this.name;
+      @*/
+    /*@ pure @*/
+    public String getName() { 
+        return name; 
+    }
 
-    public void setLoanHistory(List<Loan> history) {
-        this.loanHistory = history;
+    /*@ public normal_behavior
+      @   ensures \result != null;
+      @*/
+    /*@ pure @*/
+    public List<Loan> getLoanHistory() {
+        return Collections.unmodifiableList(loanHistory);
     }
 }
