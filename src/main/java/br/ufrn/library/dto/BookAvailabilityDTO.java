@@ -6,13 +6,19 @@ import br.ufrn.library.model.PhysicalBook;
 
 public class BookAvailabilityDTO {
 
-    private final String isbn;
-    private final String title;
-    private final String author;
-    private final String type;
-    private final String availability;
+    private /*@ spec_public @*/ final String isbn;
+    private /*@ spec_public @*/ final String title;
+    private /*@ spec_public @*/ final String author;
+    private /*@ spec_public @*/ final String type;
+    private /*@ spec_public @*/ final String availability;
 
-    /*@ pure @*/
+    /*@ public behavior
+      @   requires book != null;
+      @   requires book instanceof PhysicalBook ==> 
+      @      ((PhysicalBook)book).totalCopies >= 0 &&
+      @      ((PhysicalBook)book).availableCopies >= 0 &&
+      @      ((PhysicalBook)book).availableCopies <= ((PhysicalBook)book).totalCopies;
+      @*/
     public BookAvailabilityDTO(Book book) {
         this.isbn = book.getIsbn();
         this.title = book.getTitle();
@@ -21,7 +27,9 @@ public class BookAvailabilityDTO {
         if (book instanceof PhysicalBook) {
             PhysicalBook physicalBook = (PhysicalBook) book;
             this.type = "Físico";
-            this.availability = physicalBook.getAvailableCopies() + " / " + physicalBook.getTotalCopies();
+            this.availability =
+                physicalBook.getAvailableCopies() + " / " + physicalBook.getTotalCopies();
+
         } else if (book instanceof DigitalBook) {
             this.type = "Digital";
             this.availability = "Sempre disponível";
